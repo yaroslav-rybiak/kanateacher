@@ -6,7 +6,7 @@ let wrongField = document.getElementById("wrong");
 let leftField = document.getElementById("left");
 let correctCount = wrongCount = 0;
 let question, answer;
-let kanaDict = {
+let hiraganaDictionary = {
     'a': 'あ', 'i': 'い', 'u': 'う', 'e': 'え', 'o': 'お',
     'ka': 'か', 'ki': 'き', 'ku': 'く', 'ke': 'け', 'ko': 'こ',
     'sa': 'さ', 'shi': 'し', 'su': 'す', 'se': 'せ', 'so': 'そ',
@@ -20,10 +20,10 @@ let kanaDict = {
 };
 
 function createTask() {
-    leftField.innerHTML = Object.keys(kanaDict).length.toString();
-    let randomValue = Math.floor(Math.random()*Object.keys(kanaDict).length);
-    answer = Object.keys(kanaDict)[randomValue];
-    question = kanaDict[answer];
+    leftField.innerHTML = Object.keys(hiraganaDictionary).length.toString();
+    let randomValue = Math.floor(Math.random()*Object.keys(hiraganaDictionary).length);
+    answer = Object.keys(hiraganaDictionary)[randomValue];
+    question = hiraganaDictionary[answer];
     kanaField.innerHTML = question;
     return answer;
 }
@@ -33,24 +33,24 @@ function check() {
         let suggest = input.value.replace(/<(?:.|\n)*?>/gm, '');
 
         if (suggest === answer) {
-            answerField.innerHTML = '<span class="correct">Correct! </span>' + kanaDict[answer] + ' reads as \'' + answer + '\'';
+            answerField.innerHTML = '<span class="correct">Correct! </span>' + hiraganaDictionary[answer] + ' reads as \'' + answer + '\'';
             correctCount++;
             correctField.innerHTML = correctCount.toString();
-            delete kanaDict[answer];
+            delete hiraganaDictionary[answer];
 
         } else {
-            answerField.innerHTML = '<span class="wrong">Wrong! </span>' + kanaDict[answer] + ' reads as \'' + answer + '\' not as \'' + suggest + '\'';
+            answerField.innerHTML = '<span class="wrong">Wrong! </span>' + hiraganaDictionary[answer] + ' reads as \'' + answer + '\' not as \'' + suggest + '\'';
             wrongCount++;
             wrongField.innerHTML = wrongCount.toString();
         }
 
-        if (Object.keys(kanaDict).length > 0) {
+        if (Object.keys(hiraganaDictionary).length > 0) {
             answer = createTask();
-            question = kanaDict[answer];
+            question = hiraganaDictionary[answer];
             input.value = '';
 
         }  else {
-            leftField.innerHTML = Object.keys(kanaDict).length.toString();
+            leftField.innerHTML = Object.keys(hiraganaDictionary).length.toString();
             answerField.innerHTML = 'Game Over. <a href="javascript:location.reload()">Start again</a>';
             kanaField.innerHTML = 'Well done!';
             input.value = '';
