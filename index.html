@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Kana Practice</title>
+	<style>
+	.correct {
+		color: green;
+	}
+	.wrong {
+		color: red;
+	} 
+	</style>
+</head>
+<body onload="createTask();">
+	<div id="main">
+		<p id="kana"></p>
+		<input maxlength="3" type="text" id="romaji" onkeydown="check(this)">
+		<p id="answer">Guess the kana!</p>
+		<p>Correct: <span id="correct">0</span> Wrong: <span id="wrong">0</span> Left: <span id="left">0</span></p>
+	</div>
+	<script type="text/javascript">
+	var kanaField = document.getElementById("kana");
+	var answerField = document.getElementById("answer");
+	var input = document.getElementById("romaji");
+	var correctField = document.getElementById("correct");
+	var wrongField = document.getElementById("wrong");
+	var leftField = document.getElementById("left");
+	var correctCount = wrongCount = 0;
+	var question, answer;
+	var kanaDict = {
+		'a': 'あ', 'i': 'い', 'u': 'う', 'e': 'え', 'o': 'お',
+		'ka': 'か', 'ki': 'き', 'ku': 'く', 'ke': 'け', 'ko': 'こ',
+		'sa': 'さ', 'shi': 'し', 'su': 'す', 'se': 'せ', 'so': 'そ',
+		'ta': 'た', 'chi': 'ち', 'tsu': 'つ', 'te': 'て', 'to': 'と',
+		'na': 'な', 'ni': 'に', 'nu': 'ぬ', 'ne': 'ね', 'no': 'の',
+		'ha': 'は', 'hi': 'ひ', 'fu': 'ふ', 'he': 'へ', 'ho': 'ほ',
+		'ma': 'ま', 'mi': 'み', 'mu': 'む', 'me': 'め', 'mo': 'も',
+		'ya': 'や', 'yu': 'ゆ', 'yo': 'よ',
+		'ra': 'ら', 'ri': 'り', 'ru': 'る', 're': 'れ', 'ro': 'ろ',
+		'wa': 'わ', 'wo': 'を',
+	};
+
+	function createTask() {
+		leftField.innerHTML = Object.keys(kanaDict).length;
+		var randomValue = Math.floor(Math.random()*Object.keys(kanaDict).length);
+		answer = Object.keys(kanaDict)[randomValue];
+		question = kanaDict[answer];
+		kanaField.innerHTML = question;
+		return answer;
+	}
+
+	function check(ele) {
+		if(event.key === 'Enter') {
+			var suggest = input.value.replace(/<(?:.|\n)*?>/gm, '');
+			if (suggest === answer) {
+				answerField.innerHTML = '<span class="correct">Correct! </span>' + kanaDict[answer] + ' reads as \'' + answer + '\'';
+				correctCount++;
+				correctField.innerHTML = correctCount;
+				delete kanaDict[answer];
+				console.log(Object.keys(kanaDict).length);
+				
+			} else {
+				answerField.innerHTML = '<span class="wrong">Wrong! </span>' + kanaDict[answer] + ' reads as \'' + answer + '\' not as \'' + suggest + '\'';
+				wrongCount++;
+				wrongField.innerHTML = wrongCount;
+			}
+			if (Object.keys(kanaDict).length === 0) {
+				leftField.innerHTML = Object.keys(kanaDict).length;
+				answerField.innerHTML = 'Game Over. <a href="javascript:location.reload()">Start again</a>';
+				kanaField.innerHTML = 'Congratulations!';
+				input.value = '';
+			} else {
+				answer = createTask();
+				question = kanaDict[answer];
+				input.value = '';
+			}
+		} 
+	}
+	</script>
+</body>
