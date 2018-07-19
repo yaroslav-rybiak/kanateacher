@@ -1,6 +1,17 @@
+body {
+    text-align: center;
+}
+
 .correct {
-		color: green;
-	}
+	color: green;
+}
 .wrong {
-		color: red;
-	} 
+	color: red;
+}
+#kana {
+    height: 120px;
+    font-size: 96px;
+}
+#answer {
+    height: 20px;
+}
