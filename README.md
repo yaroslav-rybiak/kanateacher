@@ -1,0 +1,1 @@
+I just try to clone functionality of http://unckel.de/kanateacher/ for studying purposes.
