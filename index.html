@@ -15,11 +15,16 @@
         <label><input type="radio" name="script" value="katakana"> Katakana</label>
         <label><input type="radio" name="script" value="both"> Both</label>
     </fieldset>
+    <p id="status"></p>
     <p id="kana" lang="ja"></p>
     <label for="romaji" class="visually-hidden">Romaji</label>
     <input type="text" id="romaji" autofocus autocomplete="off" autocapitalize="off" spellcheck="false">
     <p id="answer"></p>
     <p>Correct: <span id="correct">0</span> Wrong: <span id="wrong">0</span> Left: <span id="left">0</span></p>
+    <section id="review" hidden>
+        <h2>Kana to review</h2>
+        <ul id="review-list"></ul>
+    </section>
 </main>
 <script src="scripts.js"></script>
 </body>

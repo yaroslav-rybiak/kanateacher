@@ -4,6 +4,9 @@ const input = document.getElementById('romaji');
 const correctField = document.getElementById('correct');
 const wrongField = document.getElementById('wrong');
 const leftField = document.getElementById('left');
+const statusField = document.getElementById('status');
+const reviewField = document.getElementById('review');
+const reviewList = document.getElementById('review-list');
 
 const scriptRadios = document.querySelectorAll('input[name="script"]');
 
@@ -60,6 +63,9 @@ let pool = [];
 let current = null;
 let correctCount = 0;
 let wrongCount = 0;
+let reviewRound = 0;
+let roundMistakes = new Set(); // kana missed in the current round
+let allMistakes = new Set();   // kana missed at any point this game
 
 function selectedScripts() {
     const mode = document.querySelector('input[name="script"]:checked').value;
@@ -67,8 +73,12 @@ function selectedScripts() {
 }
 
 function buildPool() {
-    return selectedScripts().flatMap(script =>
-        KANA.map(kana => ({ char: kana[script], romaji: kana.romaji }))
+    return selectedScripts().flatMap((script, scriptIndex) =>
+        KANA.map((kana, i) => ({
+            char: kana[script],
+            romaji: kana.romaji,
+            order: scriptIndex * KANA.length + i,
+        }))
     );
 }
 
@@ -76,7 +86,12 @@ function startGame() {
     pool = buildPool();
     correctCount = 0;
     wrongCount = 0;
+    reviewRound = 0;
+    roundMistakes = new Set();
+    allMistakes = new Set();
+    statusField.textContent = '';
     answerField.textContent = '';
+    reviewField.hidden = true;
     kanaField.classList.remove('done');
     input.disabled = false;
     input.value = '';
@@ -93,15 +108,49 @@ function updateCounters() {
 
 function nextTask() {
     if (pool.length === 0) {
-        finishGame();
-        return;
+        if (roundMistakes.size > 0) {
+            startReviewRound();
+        } else {
+            finishGame();
+            return;
+        }
     }
     current = pool[Math.floor(Math.random() * pool.length)];
     kanaField.textContent = current.char;
 }
 
+function startReviewRound() {
+    pool = [...roundMistakes];
+    roundMistakes = new Set();
+    reviewRound++;
+    statusField.textContent = `Review round ${reviewRound}: only the kana you missed`;
+    updateCounters();
+}
+
+function showReviewList() {
+    reviewList.textContent = '';
+    [...allMistakes]
+        .sort((a, b) => a.order - b.order)
+        .forEach(item => {
+            const entry = document.createElement('li');
+            const char = document.createElement('span');
+            char.className = 'review-char';
+            char.lang = 'ja';
+            char.textContent = item.char;
+            const romaji = document.createElement('span');
+            romaji.textContent = item.romaji;
+            entry.append(char, romaji);
+            reviewList.appendChild(entry);
+        });
+    reviewField.hidden = false;
+}
+
 function finishGame() {
     current = null;
+    statusField.textContent = '';
+    if (allMistakes.size > 0) {
+        showReviewList();
+    }
     kanaField.textContent = 'Well done!';
     kanaField.classList.add('done');
     input.disabled = true;
@@ -146,6 +195,8 @@ function check(event) {
         pool.splice(pool.indexOf(current), 1);
     } else {
         wrongCount++;
+        roundMistakes.add(current);
+        allMistakes.add(current);
     }
 
     input.value = '';
