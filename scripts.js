@@ -1,12 +1,11 @@
-let kanaField = document.getElementById("kana");
-let answerField = document.getElementById("answer");
-let input = document.getElementById("romaji");
-let correctField = document.getElementById("correct");
-let wrongField = document.getElementById("wrong");
-let leftField = document.getElementById("left");
-let correctCount = wrongCount = 0;
-let question, answer;
-let hiraganaDictionary = {
+const kanaField = document.getElementById('kana');
+const answerField = document.getElementById('answer');
+const input = document.getElementById('romaji');
+const correctField = document.getElementById('correct');
+const wrongField = document.getElementById('wrong');
+const leftField = document.getElementById('left');
+
+const HIRAGANA = {
     'a': 'あ', 'i': 'い', 'u': 'う', 'e': 'え', 'o': 'お',
     'ka': 'か', 'ki': 'き', 'ku': 'く', 'ke': 'け', 'ko': 'こ',
     'sa': 'さ', 'shi': 'し', 'su': 'す', 'se': 'せ', 'so': 'そ',
@@ -19,41 +18,89 @@ let hiraganaDictionary = {
     'wa': 'わ', 'wo': 'を',
 };
 
-function createTask() {
-    leftField.innerHTML = Object.keys(hiraganaDictionary).length.toString();
-    let randomValue = Math.floor(Math.random()*Object.keys(hiraganaDictionary).length);
-    answer = Object.keys(hiraganaDictionary)[randomValue];
-    question = hiraganaDictionary[answer];
-    kanaField.innerHTML = question;
-    return answer;
+let pool = [];
+let current = null;
+let correctCount = 0;
+let wrongCount = 0;
+
+function startGame() {
+    pool = Object.keys(HIRAGANA).map(romaji => ({ char: HIRAGANA[romaji], romaji }));
+    correctCount = 0;
+    wrongCount = 0;
+    answerField.textContent = '';
+    input.disabled = false;
+    input.value = '';
+    updateCounters();
+    nextTask();
+    input.focus();
 }
 
-function check() {
-    if(event.key === 'Enter') {
-        let suggest = input.value.replace(/<(?:.|\n)*?>/gm, '');
+function updateCounters() {
+    correctField.textContent = correctCount;
+    wrongField.textContent = wrongCount;
+    leftField.textContent = pool.length;
+}
 
-        if (suggest === answer) {
-            answerField.innerHTML = '<span class="correct">Correct! </span>' + hiraganaDictionary[answer] + ' reads as \'' + answer + '\'';
-            correctCount++;
-            correctField.innerHTML = correctCount.toString();
-            delete hiraganaDictionary[answer];
-
-        } else {
-            answerField.innerHTML = '<span class="wrong">Wrong! </span>' + hiraganaDictionary[answer] + ' reads as \'' + answer + '\' not as \'' + suggest + '\'';
-            wrongCount++;
-            wrongField.innerHTML = wrongCount.toString();
-        }
-
-        if (Object.keys(hiraganaDictionary).length > 0) {
-            answer = createTask();
-            question = hiraganaDictionary[answer];
-            input.value = '';
-
-        }  else {
-            leftField.innerHTML = Object.keys(hiraganaDictionary).length.toString();
-            answerField.innerHTML = 'Game Over. <a href="javascript:location.reload()">Start again</a>';
-            kanaField.innerHTML = 'Well done!';
-            input.value = '';
-        }
+function nextTask() {
+    if (pool.length === 0) {
+        finishGame();
+        return;
     }
+    current = pool[Math.floor(Math.random() * pool.length)];
+    kanaField.textContent = current.char;
 }
+
+function finishGame() {
+    current = null;
+    kanaField.textContent = 'Well done!';
+    input.disabled = true;
+
+    const restart = document.createElement('a');
+    restart.href = '#';
+    restart.textContent = 'Start again';
+    restart.addEventListener('click', event => {
+        event.preventDefault();
+        startGame();
+    });
+    answerField.textContent = 'Game Over. ';
+    answerField.appendChild(restart);
+}
+
+function showFeedback(isCorrect, guess) {
+    const verdict = document.createElement('span');
+    verdict.className = isCorrect ? 'correct' : 'wrong';
+    verdict.textContent = isCorrect ? 'Correct! ' : 'Wrong! ';
+
+    let text = `${current.char} reads as '${current.romaji}'`;
+    if (!isCorrect) {
+        text += ` not as '${guess}'`;
+    }
+    answerField.textContent = '';
+    answerField.append(verdict, text);
+}
+
+function check(event) {
+    if (event.key !== 'Enter' || !current) {
+        return;
+    }
+    const guess = input.value.trim().toLowerCase();
+    if (guess === '') {
+        return;
+    }
+
+    const isCorrect = guess === current.romaji;
+    showFeedback(isCorrect, guess);
+    if (isCorrect) {
+        correctCount++;
+        pool.splice(pool.indexOf(current), 1);
+    } else {
+        wrongCount++;
+    }
+
+    input.value = '';
+    updateCounters();
+    nextTask();
+}
+
+input.addEventListener('keydown', check);
+startGame();
