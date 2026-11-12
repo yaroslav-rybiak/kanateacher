@@ -43,6 +43,11 @@ p {
     line-height: 120px;
 }
 
+#kana.done {
+    font-size: 48px;
+    white-space: nowrap;
+}
+
 #romaji {
     display: block;
     width: 100%;

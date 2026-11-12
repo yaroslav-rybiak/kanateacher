@@ -77,6 +77,7 @@ function startGame() {
     correctCount = 0;
     wrongCount = 0;
     answerField.textContent = '';
+    kanaField.classList.remove('done');
     input.disabled = false;
     input.value = '';
     updateCounters();
@@ -102,6 +103,7 @@ function nextTask() {
 function finishGame() {
     current = null;
     kanaField.textContent = 'Well done!';
+    kanaField.classList.add('done');
     input.disabled = true;
 
     const restart = document.createElement('a');
