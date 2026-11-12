@@ -1,10 +1,9 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
 <head>
-    <link rel="icon"
-          type="image/png"
-          href="favicon.ico">
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Kana Practice</title>
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -27,9 +26,10 @@
                     <label class="form-check-label" for="script-both">Both</label>
                 </div>
             </div>
-            <p id="kana"></p>
-            <label for="romaji"></label>
-            <input type="text" class="form-control col-md-4 col-sm-12 offset-md-4" id="romaji">
+            <p id="kana" lang="ja"></p>
+            <label for="romaji" class="sr-only">Romaji</label>
+            <input type="text" class="form-control col-md-4 col-sm-12 offset-md-4" id="romaji"
+                   autofocus autocomplete="off" autocapitalize="off" spellcheck="false">
         </div>
     </div>
     <div class="row justify-content-md-center">
