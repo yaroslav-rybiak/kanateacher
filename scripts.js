@@ -6,9 +6,13 @@ const wrongField = document.getElementById('wrong');
 const leftField = document.getElementById('left');
 const statusField = document.getElementById('status');
 const reviewField = document.getElementById('review');
+const reviewTitle = document.getElementById('review-title');
 const reviewGroups = document.getElementById('review-groups');
 
+const modeRadios = document.querySelectorAll('input[name="mode"]');
 const scriptRadios = document.querySelectorAll('input[name="script"]');
+
+const WORDS_PER_GAME = 20;
 
 const KANA = [
     { romaji: 'a', hiragana: 'あ', katakana: 'ア' },
@@ -64,8 +68,9 @@ let current = null;
 let correctCount = 0;
 let wrongCount = 0;
 let reviewRound = 0;
-let roundMistakes = new Set(); // kana missed in the current round
-let allMistakes = new Set();   // kana missed at any point this game
+let roundMistakes = new Set(); // items missed in the current round
+let allMistakes = new Set();   // items missed at any point this game
+let gameMode = 'kana';         // 'kana' or 'words'
 let gameScripts = [];          // scripts in play, e.g. ['hiragana'] or both
 
 const SCRIPT_LABELS = { hiragana: 'Hiragana', katakana: 'Katakana' };
@@ -75,7 +80,11 @@ function selectedScripts() {
     return mode === 'both' ? ['hiragana', 'katakana'] : [mode];
 }
 
-function buildPool() {
+function selectedMode() {
+    return document.querySelector('input[name="mode"]:checked').value;
+}
+
+function buildKanaPool() {
     return gameScripts.flatMap(script =>
         KANA.map((kana, i) => ({
             char: kana[script],
@@ -86,11 +95,41 @@ function buildPool() {
     );
 }
 
+function shuffle(items) {
+    const result = [...items];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
+
+// A fresh random set of words each game, split evenly between the scripts in play.
+function buildWordPool() {
+    const perScript = Math.floor(WORDS_PER_GAME / gameScripts.length);
+    return gameScripts.flatMap(script => {
+        const words = WORDS.filter(word => scriptOf(word.kana) === script);
+        return shuffle(words).slice(0, perScript).map(word => ({
+            char: word.kana,
+            romaji: toRomaji(word.kana),
+            meaning: word.meaning,
+            script,
+            order: WORDS.indexOf(word),
+            isWord: true,
+        }));
+    });
+}
+
+function buildPool() {
+    return gameMode === 'words' ? buildWordPool() : buildKanaPool();
+}
+
 function isMixed() {
     return gameScripts.length > 1;
 }
 
 function startGame() {
+    gameMode = selectedMode();
     gameScripts = selectedScripts();
     pool = buildPool();
     correctCount = 0;
@@ -126,19 +165,23 @@ function nextTask() {
     }
     current = pool[Math.floor(Math.random() * pool.length)];
     kanaField.textContent = current.char;
+    // Words are sized in CSS from their length so they always fit on one line.
+    kanaField.classList.toggle('word', Boolean(current.isWord));
+    kanaField.style.setProperty('--len', [...current.char].length);
 }
 
 function startReviewRound() {
     pool = [...roundMistakes];
     roundMistakes = new Set();
     reviewRound++;
-    statusField.textContent = `Review round ${reviewRound}: only the kana you missed`;
+    const what = gameMode === 'words' ? 'words' : 'kana';
+    statusField.textContent = `Review round ${reviewRound}: only the ${what} you missed`;
     updateCounters();
 }
 
 function buildReviewList(items) {
     const list = document.createElement('ul');
-    list.className = 'review-list';
+    list.className = gameMode === 'words' ? 'review-list words' : 'review-list';
     items
         .sort((a, b) => a.order - b.order)
         .forEach(item => {
@@ -150,12 +193,19 @@ function buildReviewList(items) {
             const romaji = document.createElement('span');
             romaji.textContent = item.romaji;
             entry.append(char, romaji);
+            if (item.meaning) {
+                const meaning = document.createElement('span');
+                meaning.className = 'review-meaning';
+                meaning.textContent = item.meaning;
+                entry.appendChild(meaning);
+            }
             list.appendChild(entry);
         });
     return list;
 }
 
 function showReviewList() {
+    reviewTitle.textContent = gameMode === 'words' ? 'Words to review' : 'Kana to review';
     reviewGroups.textContent = '';
     gameScripts.forEach(script => {
         const items = [...allMistakes].filter(item => item.script === script);
@@ -179,6 +229,7 @@ function finishGame() {
         showReviewList();
     }
     kanaField.textContent = 'Well done!';
+    kanaField.classList.remove('word');
     kanaField.classList.add('done');
     input.disabled = true;
 
@@ -200,6 +251,9 @@ function showFeedback(isCorrect, guess) {
 
     const scriptName = isMixed() ? `${current.script} ` : '';
     let text = `${scriptName}${current.char} reads as '${current.romaji}'`;
+    if (current.meaning) {
+        text += ` (${current.meaning})`;
+    }
     if (!isCorrect) {
         text += ` not as '${guess}'`;
     }
@@ -216,7 +270,9 @@ function check(event) {
         return;
     }
 
-    const isCorrect = guess === current.romaji;
+    const isCorrect = current.isWord
+        ? matchesRomaji(current.char, guess)
+        : guess === current.romaji;
     showFeedback(isCorrect, guess);
     if (isCorrect) {
         correctCount++;
@@ -233,5 +289,5 @@ function check(event) {
 }
 
 input.addEventListener('keydown', check);
-scriptRadios.forEach(radio => radio.addEventListener('change', startGame));
+[...modeRadios, ...scriptRadios].forEach(radio => radio.addEventListener('change', startGame));
 startGame();

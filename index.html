@@ -9,12 +9,17 @@
 </head>
 <body>
 <main>
-    <fieldset id="selector">
-        <legend class="visually-hidden">Script</legend>
-        <label><input type="radio" name="script" value="hiragana" checked> Hiragana</label>
-        <label><input type="radio" name="script" value="katakana"> Katakana</label>
-        <label><input type="radio" name="script" value="both"> Both</label>
-    </fieldset>
+    <div id="selector">
+        <div class="segmented" role="radiogroup" aria-label="Practise">
+            <label><input type="radio" name="mode" value="kana" checked><span>Kana</span></label>
+            <label><input type="radio" name="mode" value="words"><span>Words</span></label>
+        </div>
+        <div class="segmented" role="radiogroup" aria-label="Script">
+            <label><input type="radio" name="script" value="hiragana" checked><span>Hiragana</span></label>
+            <label><input type="radio" name="script" value="katakana"><span>Katakana</span></label>
+            <label><input type="radio" name="script" value="both"><span>Both</span></label>
+        </div>
+    </div>
     <p id="status"></p>
     <p id="kana" lang="ja"></p>
     <label for="romaji" class="visually-hidden">Romaji</label>
@@ -22,10 +27,12 @@
     <p id="answer"></p>
     <p>Correct: <span id="correct">0</span> Wrong: <span id="wrong">0</span> Left: <span id="left">0</span></p>
     <section id="review" hidden>
-        <h2>Kana to review</h2>
+        <h2 id="review-title">Kana to review</h2>
         <div id="review-groups"></div>
     </section>
 </main>
+<script src="romaji.js"></script>
+<script src="words.js"></script>
 <script src="scripts.js"></script>
 </body>
 </html>
