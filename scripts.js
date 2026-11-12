@@ -6,7 +6,7 @@ const wrongField = document.getElementById('wrong');
 const leftField = document.getElementById('left');
 const statusField = document.getElementById('status');
 const reviewField = document.getElementById('review');
-const reviewList = document.getElementById('review-list');
+const reviewGroups = document.getElementById('review-groups');
 
 const scriptRadios = document.querySelectorAll('input[name="script"]');
 
@@ -66,6 +66,9 @@ let wrongCount = 0;
 let reviewRound = 0;
 let roundMistakes = new Set(); // kana missed in the current round
 let allMistakes = new Set();   // kana missed at any point this game
+let gameScripts = [];          // scripts in play, e.g. ['hiragana'] or both
+
+const SCRIPT_LABELS = { hiragana: 'Hiragana', katakana: 'Katakana' };
 
 function selectedScripts() {
     const mode = document.querySelector('input[name="script"]:checked').value;
@@ -73,16 +76,22 @@ function selectedScripts() {
 }
 
 function buildPool() {
-    return selectedScripts().flatMap((script, scriptIndex) =>
+    return gameScripts.flatMap(script =>
         KANA.map((kana, i) => ({
             char: kana[script],
             romaji: kana.romaji,
-            order: scriptIndex * KANA.length + i,
+            script,
+            order: i,
         }))
     );
 }
 
+function isMixed() {
+    return gameScripts.length > 1;
+}
+
 function startGame() {
+    gameScripts = selectedScripts();
     pool = buildPool();
     correctCount = 0;
     wrongCount = 0;
@@ -127,9 +136,10 @@ function startReviewRound() {
     updateCounters();
 }
 
-function showReviewList() {
-    reviewList.textContent = '';
-    [...allMistakes]
+function buildReviewList(items) {
+    const list = document.createElement('ul');
+    list.className = 'review-list';
+    items
         .sort((a, b) => a.order - b.order)
         .forEach(item => {
             const entry = document.createElement('li');
@@ -140,8 +150,25 @@ function showReviewList() {
             const romaji = document.createElement('span');
             romaji.textContent = item.romaji;
             entry.append(char, romaji);
-            reviewList.appendChild(entry);
+            list.appendChild(entry);
         });
+    return list;
+}
+
+function showReviewList() {
+    reviewGroups.textContent = '';
+    gameScripts.forEach(script => {
+        const items = [...allMistakes].filter(item => item.script === script);
+        if (items.length === 0) {
+            return;
+        }
+        if (isMixed()) {
+            const label = document.createElement('h3');
+            label.textContent = SCRIPT_LABELS[script];
+            reviewGroups.appendChild(label);
+        }
+        reviewGroups.appendChild(buildReviewList(items));
+    });
     reviewField.hidden = false;
 }
 
@@ -171,7 +198,8 @@ function showFeedback(isCorrect, guess) {
     verdict.className = isCorrect ? 'correct' : 'wrong';
     verdict.textContent = isCorrect ? 'Correct! ' : 'Wrong! ';
 
-    let text = `${current.char} reads as '${current.romaji}'`;
+    const scriptName = isMixed() ? `${current.script} ` : '';
+    let text = `${scriptName}${current.char} reads as '${current.romaji}'`;
     if (!isCorrect) {
         text += ` not as '${guess}'`;
     }
