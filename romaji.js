@@ -39,6 +39,12 @@ Object.keys(YOON_CONSONANTS).forEach(kana => {
     });
 });
 
+const MACRONS = { a: 'ā', i: 'ī', u: 'ū', e: 'ē', o: 'ō' };
+// What a typed macron may stand for: ō is "oo" (コート) or "ou" (がっこう), etc.
+const MACRON_EXPANSIONS = {
+    'ā': ['aa'], 'ī': ['ii'], 'ū': ['uu'], 'ē': ['ee', 'ei'], 'ō': ['oo', 'ou'],
+};
+
 const HIRAGANA_RE = /^[ぁ-ゖ]+$/;
 const KATAKANA_RE = /^[ァ-ヶー]+$/;
 
@@ -91,33 +97,51 @@ function tokenize(word) {
             );
         } else if (ch === 'ー') {
             i++;
-            const previous = units[units.length - 1].display;
-            alts = [previous[previous.length - 1], '-'];
+            // The long vowel mark repeats the previous vowel. It is shown as a
+            // macron on that vowel (コート = kōto); "ou" is also accepted for long o.
+            const previous = units[units.length - 1];
+            const vowel = previous.alts[0].slice(-1);
+            alts = vowel === 'o' ? ['o', 'u', '-'] : [vowel, '-'];
+            previous.display = previous.display.slice(0, -1) + MACRONS[vowel];
+            display = '';
         } else {
             alts = readPlain();
         }
-        units.push({ alts, display: display || alts[0] });
+        units.push({ alts, display: display === undefined ? alts[0] : display });
     }
     return units;
 }
 
-// The spelling shown as the correct answer, e.g. がっこう -> gakkou.
+// The spelling shown as the correct answer, e.g. がっこう -> gakkou, コート -> kōto.
 function toRomaji(word) {
     return tokenize(word).map(unit => unit.display).join('');
+}
+
+// Every plain-letter reading of a guess that may contain macrons (kōto -> kooto, kouto).
+function expandMacrons(guess) {
+    return [...guess.normalize('NFC')].reduce(
+        (results, ch) => results.flatMap(prefix =>
+            (MACRON_EXPANSIONS[ch] || [ch]).map(part => prefix + part)
+        ),
+        ['']
+    );
 }
 
 // True if `guess` is any accepted spelling of `word`.
 function matchesRomaji(word, guess) {
     const units = tokenize(word);
-    const match = (unitIndex, position) => {
-        if (unitIndex === units.length) {
-            return position === guess.length;
-        }
-        return units[unitIndex].alts.some(alt =>
-            guess.startsWith(alt, position) && match(unitIndex + 1, position + alt.length)
-        );
+    const matches = candidate => {
+        const match = (unitIndex, position) => {
+            if (unitIndex === units.length) {
+                return position === candidate.length;
+            }
+            return units[unitIndex].alts.some(alt =>
+                candidate.startsWith(alt, position) && match(unitIndex + 1, position + alt.length)
+            );
+        };
+        return match(0, 0);
     };
-    return match(0, 0);
+    return expandMacrons(guess).some(matches);
 }
 
 if (typeof module !== 'undefined') {
