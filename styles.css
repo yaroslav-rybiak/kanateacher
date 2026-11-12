@@ -9,6 +9,9 @@ body {
 .wrong {
 	color: red;
 }
+#selector {
+    margin: 20px 0;
+}
 #kana {
     height: 120px;
     font-size: 96px;

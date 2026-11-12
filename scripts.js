@@ -5,26 +5,75 @@ const correctField = document.getElementById('correct');
 const wrongField = document.getElementById('wrong');
 const leftField = document.getElementById('left');
 
-const HIRAGANA = {
-    'a': 'あ', 'i': 'い', 'u': 'う', 'e': 'え', 'o': 'お',
-    'ka': 'か', 'ki': 'き', 'ku': 'く', 'ke': 'け', 'ko': 'こ',
-    'sa': 'さ', 'shi': 'し', 'su': 'す', 'se': 'せ', 'so': 'そ',
-    'ta': 'た', 'chi': 'ち', 'tsu': 'つ', 'te': 'て', 'to': 'と',
-    'na': 'な', 'ni': 'に', 'nu': 'ぬ', 'ne': 'ね', 'no': 'の',
-    'ha': 'は', 'hi': 'ひ', 'fu': 'ふ', 'he': 'へ', 'ho': 'ほ',
-    'ma': 'ま', 'mi': 'み', 'mu': 'む', 'me': 'め', 'mo': 'も',
-    'ya': 'や', 'yu': 'ゆ', 'yo': 'よ',
-    'ra': 'ら', 'ri': 'り', 'ru': 'る', 're': 'れ', 'ro': 'ろ',
-    'wa': 'わ', 'wo': 'を', 'n': 'ん',
-};
+const scriptRadios = document.querySelectorAll('input[name="script"]');
+
+const KANA = [
+    { romaji: 'a', hiragana: 'あ', katakana: 'ア' },
+    { romaji: 'i', hiragana: 'い', katakana: 'イ' },
+    { romaji: 'u', hiragana: 'う', katakana: 'ウ' },
+    { romaji: 'e', hiragana: 'え', katakana: 'エ' },
+    { romaji: 'o', hiragana: 'お', katakana: 'オ' },
+    { romaji: 'ka', hiragana: 'か', katakana: 'カ' },
+    { romaji: 'ki', hiragana: 'き', katakana: 'キ' },
+    { romaji: 'ku', hiragana: 'く', katakana: 'ク' },
+    { romaji: 'ke', hiragana: 'け', katakana: 'ケ' },
+    { romaji: 'ko', hiragana: 'こ', katakana: 'コ' },
+    { romaji: 'sa', hiragana: 'さ', katakana: 'サ' },
+    { romaji: 'shi', hiragana: 'し', katakana: 'シ' },
+    { romaji: 'su', hiragana: 'す', katakana: 'ス' },
+    { romaji: 'se', hiragana: 'せ', katakana: 'セ' },
+    { romaji: 'so', hiragana: 'そ', katakana: 'ソ' },
+    { romaji: 'ta', hiragana: 'た', katakana: 'タ' },
+    { romaji: 'chi', hiragana: 'ち', katakana: 'チ' },
+    { romaji: 'tsu', hiragana: 'つ', katakana: 'ツ' },
+    { romaji: 'te', hiragana: 'て', katakana: 'テ' },
+    { romaji: 'to', hiragana: 'と', katakana: 'ト' },
+    { romaji: 'na', hiragana: 'な', katakana: 'ナ' },
+    { romaji: 'ni', hiragana: 'に', katakana: 'ニ' },
+    { romaji: 'nu', hiragana: 'ぬ', katakana: 'ヌ' },
+    { romaji: 'ne', hiragana: 'ね', katakana: 'ネ' },
+    { romaji: 'no', hiragana: 'の', katakana: 'ノ' },
+    { romaji: 'ha', hiragana: 'は', katakana: 'ハ' },
+    { romaji: 'hi', hiragana: 'ひ', katakana: 'ヒ' },
+    { romaji: 'fu', hiragana: 'ふ', katakana: 'フ' },
+    { romaji: 'he', hiragana: 'へ', katakana: 'ヘ' },
+    { romaji: 'ho', hiragana: 'ほ', katakana: 'ホ' },
+    { romaji: 'ma', hiragana: 'ま', katakana: 'マ' },
+    { romaji: 'mi', hiragana: 'み', katakana: 'ミ' },
+    { romaji: 'mu', hiragana: 'む', katakana: 'ム' },
+    { romaji: 'me', hiragana: 'め', katakana: 'メ' },
+    { romaji: 'mo', hiragana: 'も', katakana: 'モ' },
+    { romaji: 'ya', hiragana: 'や', katakana: 'ヤ' },
+    { romaji: 'yu', hiragana: 'ゆ', katakana: 'ユ' },
+    { romaji: 'yo', hiragana: 'よ', katakana: 'ヨ' },
+    { romaji: 'ra', hiragana: 'ら', katakana: 'ラ' },
+    { romaji: 'ri', hiragana: 'り', katakana: 'リ' },
+    { romaji: 'ru', hiragana: 'る', katakana: 'ル' },
+    { romaji: 're', hiragana: 'れ', katakana: 'レ' },
+    { romaji: 'ro', hiragana: 'ろ', katakana: 'ロ' },
+    { romaji: 'wa', hiragana: 'わ', katakana: 'ワ' },
+    { romaji: 'wo', hiragana: 'を', katakana: 'ヲ' },
+    { romaji: 'n', hiragana: 'ん', katakana: 'ン' },
+];
 
 let pool = [];
 let current = null;
 let correctCount = 0;
 let wrongCount = 0;
 
+function selectedScripts() {
+    const mode = document.querySelector('input[name="script"]:checked').value;
+    return mode === 'both' ? ['hiragana', 'katakana'] : [mode];
+}
+
+function buildPool() {
+    return selectedScripts().flatMap(script =>
+        KANA.map(kana => ({ char: kana[script], romaji: kana.romaji }))
+    );
+}
+
 function startGame() {
-    pool = Object.keys(HIRAGANA).map(romaji => ({ char: HIRAGANA[romaji], romaji }));
+    pool = buildPool();
     correctCount = 0;
     wrongCount = 0;
     answerField.textContent = '';
@@ -103,4 +152,5 @@ function check(event) {
 }
 
 input.addEventListener('keydown', check);
+scriptRadios.forEach(radio => radio.addEventListener('change', startGame));
 startGame();
